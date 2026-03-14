@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-br">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Centz | Sênior Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0" rel="stylesheet"/>
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1a6fff",
+                        "primary-dark": "#0f4fd4",
+                        "background-dark": "#070b14",
+                        "card-dark": "#0d1424",
+                        "card-hover": "#111929",
+                        "success": "#10e88b",
+                        "danger": "#ff4d6d",
+                        "investment": "#00ffa3",
+                        "accent": "#00cfff",
+                    },
+                    fontFamily: { "display": ["Manrope", "sans-serif"] }
+                },
+            },
+        }
+    </script>
+
+    <style>
+        :root {
+            --primary: #1a6fff;
+            --success: #10e88b;
+            --danger: #ff4d6d;
+            --investment: #00ffa3;
+            --accent: #00cfff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #070b14;
+            background-image: 
+                radial-gradient(ellipse 80% 40% at 50% -10%, rgba(26,111,255,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 30% at 90% 20%, rgba(0,207,255,0.06) 0%, transparent 60%);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .investment-glow { text-shadow: 0 0 16px rgba(0, 255, 163, 0.5); }
+        .success-glow { text-shadow: 0 0 12px rgba(16, 232, 139, 0.4); }
+        .danger-glow { text-shadow: 0 0 12px rgba(255, 77, 109, 0.4); }
+
+        .card-glow-blue { box-shadow: 0 0 0 1px rgba(26,111,255,0.15), 0 8px 32px rgba(26,111,255,0.08); }
+        .card-glow-green { box-shadow: 0 0 0 1px rgba(0,255,163,0.2), 0 8px 32px rgba(0,255,163,0.06); }
+        .card-glow-red { box-shadow: 0 0 0 1px rgba(255,77,109,0.2), 0 8px 32px rgba(255,77,109,0.06); }
+
+        /* Centz Logo SVG */
+        .centz-logo-ring {
+            animation: spin-slow 12s linear infinite;
+            transform-origin: 50% 50%;
+        }
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Modal */
+        #modal { transition: opacity 0.2s ease; }
+        #modal.hidden { opacity: 0; pointer-events: none; display: flex !important; visibility: hidden; }
+        #modal:not(.hidden) { opacity: 1; visibility: visible; }
+
+        .modal-card {
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #modal:not(.hidden) .modal-card { transform: translateY(0); }
+
+        /* Progress bars */
+        .bar-fill { transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Transaction items */
+        .tx-item { transition: background 0.15s ease; }
+        .tx-item:hover { background: rgba(255,255,255,0.03); }
+
+        /* Nav */
+        .nav-pill {
+            background: rgba(13,20,36,0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+
+        /* Amount colors */
+        .amount-positive { color: var(--success); }
+        .amount-negative { color: var(--danger); }
+        .amount-invest { color: var(--investment); }
+
+        /* Input styling */
+        .form-input {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            color: white;
+            width: 100%;
+            padding: 10px 14px;
+            font-family: 'Manrope', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: rgba(26,111,255,0.6);
+            box-shadow: 0 0 0 3px rgba(26,111,255,0.1);
+        }
+        .form-input option { background: #0d1424; }
+
+        /* Delete button */
+        .delete-btn {
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .tx-item:hover .delete-btn { opacity: 1; }
+
+        /* Summary badges */
+        .badge { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* Animated gradient border for balance card */
+        .balance-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            padding: 1px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(26,111,255,0.4), rgba(0,207,255,0.2), rgba(26,111,255,0.1));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* Scrollable transaction list */
+        #transaction-list { max-height: 480px; overflow-y: auto; }
+        #transaction-list::-webkit-scrollbar { width: 3px; }
+        #transaction-list::-webkit-scrollbar-track { background: transparent; }
+        #transaction-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        /* Month change button */
+        .month-btn { transition: color 0.15s, background 0.15s; }
+        .month-btn:hover { background: rgba(26,111,255,0.15); color: var(--primary); border-radius: 8px; }
+
+        /* Pulse dot */
+        .pulse-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 6px var(--success);
+            animation: pulse 2s ease infinite;
+        }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+        /* Empty state icon */
+        .empty-icon { 
+            font-size: 48px !important; 
+            opacity: 0.15;
+        }
+    </style>
+</head>
+
+<body class="font-display text-slate-100 min-h-screen pb-32">
+
+<div id="modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(12px);">
+    <div class="modal-card bg-card-dark w-full max-w-md rounded-3xl p-8 shadow-2xl" style="border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-7">
+            <div>
+                <h3 class="text-lg font-extrabold tracking-tight">Novo Lançamento</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Registre uma transação</p>
+            </div>
+            <button onclick="toggleModal()" class="text-slate-500 hover:text-white transition-colors" style="background: rgba(255,255,255,0.06); border-radius: 50%; padding: 6px; display:flex; align-items:center; justify-content:center;">
+                <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+            </button>
+        </div>
+        <form id="financeForm" class="space-y-5">
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tipo</label>
+                <select id="categoria" onchange="adjustFormByCategory()" class="form-input">
+                    <option value="Renda">💰 Entrada / Salário</option>
+                    <option value="Alimentação">🍕 Alimentação</option>
+                    <option value="Transporte">🚗 Transporte</option>
+                    <option value="Investimentos">🚀 Investimentos</option>
+                    <option value="Lazer">🍿 Lazer</option>
+                    <option value="Fixos">🏠 Custos Fixos</option>
+                    <option value="Saúde">💊 Saúde</option>
+                    <option value="Educação">📚 Educação</option>
+                </select>
+            </div>
+
+            <div>
+                <label id="label-desc" class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Descrição</label>
+                <input type="text" id="desc" required class="form-input" placeholder="Ex: Salário Mensal">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Valor (R$)</label>
+                    <input type="text" id="valor" required class="form-input" placeholder="R$ 0,00" oninput="maskCurrency(this)">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Data</label>
+                    <input type="date" id="data" required class="form-input">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full font-bold py-4 rounded-2xl transition-all text-white text-sm" style="background: linear-gradient(135deg, #1a6fff, #0f4fd4); box-shadow: 0 8px 24px rgba(26,111,255,0.3);">
+                Salvar Transação
+            </button>
+        </form>
+    </div>
+</div>
+
+<header class="sticky top-0 z-10 px-5 py-4" style="background: rgba(7,11,20,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <div class="flex items-center justify-between max-w-4xl mx-auto">
+        <div class="flex items-center gap-3">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#00ffa3"/>
+                        <stop offset="50%" style="stop-color:#00cfff"/>
+                        <stop offset="100%" style="stop-color:#1a6fff"/>
+                    </linearGradient>
+                    <linearGradient id="arrowGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#00ffa3"/>
+                        <stop offset="100%" style="stop-color:#00e5ff"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="20" cy="20" r="18" stroke="url(#logoGrad)" stroke-width="1.5" stroke-dasharray="4 3" fill="none" opacity="0.4" class="centz-logo-ring"/>
+                <path d="M28 14a11 11 0 1 0 0 12" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <path d="M22 18 L27 13 M27 13 L27 17 M27 13 L23 13" stroke="url(#arrowGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div>
+                <h1 class="text-lg font-extrabold tracking-tight leading-none">Centz</h1>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                    <div class="pulse-dot"></div>
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Sênior Dashboard</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-1" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 4px;">
+            <button onclick="changeMonth(-1)" class="month-btn p-1.5"><span class="material-symbols-outlined" style="font-size:16px; display:block;">chevron_left</span></button>
+            <span id="current-period-display" class="px-3 text-xs font-bold min-w-[110px] text-center uppercase tracking-wider">Março 2026</span>
+            <button onclick="changeMonth(1)" class="month-btn p-1.5"><span class="material-symbols-outlined" style="font-size:16px; display:block;">chevron_right</span></button>
+        </div>
+    </div>
+</header>
+
+<main class="p-4 space-y-6 max-w-4xl mx-auto pt-6">
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="balance-card bg-card-dark p-6 rounded-3xl">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Saldo do Mês</span>
+                <div style="background: rgba(26,111,255,0.1); border-radius: 10px; padding: 6px;">
+                    <span class="material-symbols-outlined text-primary" style="font-size:16px; display:block;">account_balance_wallet</span>
+                </div>
+            </div>
+            <div id="card-saldo" class="text-2xl font-extrabold tracking-tight">R$ 0,00</div>
+            <p class="text-[10px] text-slate-600 mt-2 font-medium">Renda − Despesas − Invest.</p>
+        </div>
+
+        <div class="bg-card-dark p-6 rounded-3xl card-glow-red">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--danger);">Gastos no Período</span>
+                <div style="background: rgba(255,77,109,0.1); border-radius: 10px; padding: 6px;">
+                    <span class="material-symbols-outlined" style="font-size:16px; display:block; color: var(--danger);">trending_down</span>
+                </div>
+            </div>
+            <div id="card-gastos" class="text-2xl font-extrabold tracking-tight danger-glow" style="color: var(--danger);">R$ 0,00</div>
+            <p id="gasto-status" class="text-[10px] text-slate-600 mt-2 font-medium">0% da sua renda</p>
+        </div>
+
+        <div class="bg-card-dark p-6 rounded-3xl card-glow-green">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[10px] font-bold uppercase tracking-widest investment-glow" style="color: var(--investment);">Patrimônio Total</span>
+                <div style="background: rgba(0,255,163,0.08); border-radius: 10px; padding: 6px;">
+                    <span class="material-symbols-outlined" style="font-size:16px; display:block; color: var(--investment);">rocket_launch</span>
+                </div>
+            </div>
+            <div id="card-investimentos" class="text-2xl font-extrabold tracking-tight investment-glow" style="color: var(--investment);">R$ 0,00</div>
+            <p class="text-[10px] mt-2 font-medium italic" style="color: rgba(0,255,163,0.4);">Acumulado histórico</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3" id="mini-stats">
+        <div class="bg-card-dark rounded-2xl p-4 text-center" style="border: 1px solid rgba(255,255,255,0.04);">
+            <p class="text-[9px] text-slate-600 uppercase font-bold tracking-widest mb-1">Entradas</p>
+            <p id="stat-renda" class="text-sm font-extrabold" style="color: var(--success);">R$ 0</p>
+        </div>
+        <div class="bg-card-dark rounded-2xl p-4 text-center" style="border: 1px solid rgba(255,255,255,0.04);">
+            <p class="text-[9px] text-slate-600 uppercase font-bold tracking-widest mb-1">Transações</p>
+            <p id="stat-count" class="text-sm font-extrabold text-slate-300">0</p>
+        </div>
+        <div class="bg-card-dark rounded-2xl p-4 text-center" style="border: 1px solid rgba(255,255,255,0.04);">
+            <p class="text-[9px] text-slate-600 uppercase font-bold tracking-widest mb-1">Maior Gasto</p>
+            <p id="stat-maior" class="text-sm font-extrabold" style="color: var(--danger);">R$ 0</p>
+        </div>
+    </div>
+
+    <section class="bg-card-dark p-6 rounded-3xl" style="border: 1px solid rgba(255,255,255,0.05);">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xs font-bold uppercase text-slate-500 tracking-widest">Distribuição de Gastos</h2>
+            <span id="total-percent-badge" class="badge" style="background: rgba(26,111,255,0.1); color: var(--primary);">0% comprometido</span>
+        </div>
+        <div id="category-bars" class="space-y-5">
+            <p class="text-center text-slate-700 text-xs py-4">Sem gastos neste mês.</p>
+        </div>
+    </section>
+
+    <section class="space-y-3">
+        <div class="flex justify-between items-center px-1">
+            <h2 class="text-base font-extrabold tracking-tight">Histórico do Mês</h2>
+            <button onclick="toggleModal()" class="flex items-center gap-2 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all" style="background: linear-gradient(135deg, #1a6fff, #0f4fd4); box-shadow: 0 4px 16px rgba(26,111,255,0.3);">
+                <span class="material-symbols-outlined" style="font-size:15px; display:block;">add</span>
+                Novo
+            </button>
+        </div>
+        <div class="bg-card-dark rounded-3xl overflow-hidden" style="border: 1px solid rgba(255,255,255,0.05);">
+            <div id="transaction-list" class="divide-y hide-scrollbar" style="border-color: rgba(255,255,255,0.04);">
+                <div class="p-12 text-center flex flex-col items-center gap-3">
+                    <span class="material-symbols-outlined empty-icon">receipt_long</span>
+                    <p class="text-slate-600 text-sm font-medium">Nenhum lançamento neste período.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<nav class="fixed bottom-5 left-1/2 -translate-x-1/2 nav-pill px-8 py-4 rounded-full z-20 shadow-2xl flex items-center gap-10">
+    <button id="nav-home" onclick="setNav('home')" class="transition-colors" style="color: var(--primary);">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size:22px; display:block;">grid_view</span>
+    </button>
+    <button id="nav-analytics" onclick="setNav('analytics')" class="text-slate-600 hover:text-white transition-colors">
+        <span class="material-symbols-outlined" style="font-size:22px; display:block;">analytics</span>
+    </button>
+    <button id="nav-bank" onclick="setNav('bank')" class="text-slate-600 hover:text-white transition-colors">
+        <span class="material-symbols-outlined" style="font-size:22px; display:block;">account_balance</span>
+    </button>
+</nav>
+
+<script>
+    // --- FUNÇÃO PARA MÁSCARA DE MOEDA ---
+    function maskCurrency(input) {
+        let value = input.value.replace(/\D/g, ''); // Remove tudo que não é número
+        if (value === '') {
+            input.value = '';
+            return;
+        }
+        value = (parseInt(value) / 100).toFixed(2); // Divide por 100 para ter os centavos
+        input.value = 'R$ ' + value.replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+    }
+
+    // --- FUNÇÃO PARA CONVERTER A MÁSCARA EM NÚMERO (Ex: "R$ 1.500,50" vira 1500.50) ---
+    function parseCurrencyString(str) {
+        // Remove 'R$', espaços, e os pontos (separadores de milhar)
+        let numStr = str.replace('R$', '').replace(/\s/g, '').replace(/\./g, '');
+        // Troca a vírgula por ponto (formato float)
+        numStr = numStr.replace(',', '.');
+        return parseFloat(numStr) || 0;
+    }
+
+    // --- STATE ---
+    let transactions = JSON.parse(localStorage.getItem('centz_v2.0') || localStorage.getItem('centz_v1.0') || '[]');
+    let viewDate = new Date();
+
+    const categoryConfig = {
+        'Renda':      { color: '#10e88b', bg: 'rgba(16,232,139,0.1)',  bar: '#10e88b', icon: 'payments',       emoji: '💰' },
+        'Alimentação':{ color: '#fb923c', bg: 'rgba(251,146,60,0.1)',  bar: '#fb923c', icon: 'restaurant',     emoji: '🍕' },
+        'Transporte': { color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  bar: '#60a5fa', icon: 'directions_car', emoji: '🚗' },
+        'Investimentos':{ color: '#00ffa3', bg: 'rgba(0,255,163,0.1)', bar: '#00ffa3', icon: 'rocket_launch',  emoji: '🚀' },
+        'Lazer':      { color: '#c084fc', bg: 'rgba(192,132,252,0.1)', bar: '#c084fc', icon: 'theaters',       emoji: '🍿' },
+        'Fixos':      { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', bar: '#94a3b8', icon: 'home',           emoji: '🏠' },
+        'Saúde':      { color: '#f87171', bg: 'rgba(248,113,113,0.1)', bar: '#f87171', icon: 'health_and_safety', emoji: '💊' },
+        'Educação':   { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  bar: '#fbbf24', icon: 'school',         emoji: '📚' },
+    };
+
+    function setNav(tab) {
+        document.querySelectorAll('[id^="nav-"]').forEach(b => b.style.color = '');
+        document.getElementById('nav-' + tab).style.color = 'var(--primary)';
+    }
+
+    function toggleModal() {
+        const modal = document.getElementById('modal');
+        modal.classList.toggle('hidden');
+        if (!modal.classList.contains('hidden')) {
+            document.getElementById('data').valueAsDate = new Date();
+        }
+    }
+
+    function changeMonth(step) {
+        viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + step, 1);
+        updateUI();
+    }
+
+    function adjustFormByCategory() {
+        const cat = document.getElementById('categoria').value;
+        const label = document.getElementById('label-desc');
+        label.innerText = cat === 'Investimentos' ? "Ticket / Nome do Ativo" 
+                        : cat === 'Renda'          ? "Origem da Renda" 
+                        : "Descrição";
+    }
+
+    function formatCurrency(v, short = false) {
+        if (short && Math.abs(v) >= 1000) {
+            return 'R$ ' + (v / 1000).toFixed(1).replace('.', ',') + 'k';
+        }
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+    }
+
+    function formatDate(dateStr) {
+        const d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+    }
+
+    // --- MAIN UPDATE ---
+    function updateUI() {
+        const month = viewDate.getMonth();
+        const year  = viewDate.getFullYear();
+
+        const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+        document.getElementById('current-period-display').innerText = `${monthNames[month]} ${year}`;
+
+        const monthlyData = transactions.filter(t => {
+            const d = new Date(t.data + 'T00:00:00');
+            return d.getMonth() === month && d.getFullYear() === year;
+        });
+
+        const rendaMensal   = monthlyData.filter(t => t.categoria === 'Renda').reduce((a,t) => a + t.valor, 0);
+        const gastosMensais = monthlyData.filter(t => t.categoria !== 'Renda' && t.categoria !== 'Investimentos').reduce((a,t) => a + t.valor, 0);
+        const investMensal  = monthlyData.filter(t => t.categoria === 'Investimentos').reduce((a,t) => a + t.valor, 0);
+        const patrimonioTotal = transactions.filter(t => t.categoria === 'Investimentos').reduce((a,t) => a + t.valor, 0);
+
+        const saldo = rendaMensal - gastosMensais - investMensal;
+        const saldoEl = document.getElementById('card-saldo');
+        saldoEl.innerText = formatCurrency(saldo);
+        saldoEl.style.color = saldo >= 0 ? 'var(--success)' : 'var(--danger)';
+
+        document.getElementById('card-gastos').innerText = formatCurrency(gastosMensais);
+        document.getElementById('card-investimentos').innerText = formatCurrency(patrimonioTotal);
+
+        const gastoPercent = rendaMensal > 0 ? Math.round((gastosMensais / rendaMensal) * 100) : 0;
+        document.getElementById('gasto-status').innerText = `${gastoPercent}% da sua renda mensal`;
+
+        // Mini stats
+        document.getElementById('stat-renda').innerText = formatCurrency(rendaMensal, true);
+        document.getElementById('stat-count').innerText = monthlyData.length;
+        const gastos = monthlyData.filter(t => t.categoria !== 'Renda' && t.categoria !== 'Investimentos');
+        const maiorGasto = gastos.length > 0 ? Math.max(...gastos.map(t => t.valor)) : 0;
+        document.getElementById('stat-maior').innerText = formatCurrency(maiorGasto, true);
+
+        // Total percent badge
+        const totalPercent = rendaMensal > 0 ? Math.round(((gastosMensais + investMensal) / rendaMensal) * 100) : 0;
+        const badge = document.getElementById('total-percent-badge');
+        badge.innerText = totalPercent + '% comprometido';
+        if (totalPercent > 90) { badge.style.background = 'rgba(255,77,109,0.1)'; badge.style.color = 'var(--danger)'; }
+        else if (totalPercent > 70) { badge.style.background = 'rgba(251,146,60,0.1)'; badge.style.color = '#fb923c'; }
+        else { badge.style.background = 'rgba(26,111,255,0.1)'; badge.style.color = 'var(--primary)'; }
+
+        renderBars(monthlyData, rendaMensal);
+        renderList(monthlyData);
+    }
+
+    function renderBars(data, renda) {
+        const container = document.getElementById('category-bars');
+        const cats = ['Alimentação','Transporte','Lazer','Fixos','Saúde','Educação','Investimentos'];
+        
+        const rows = cats.map(cat => {
+            const total = data.filter(t => t.categoria === cat).reduce((a,t) => a + t.valor, 0);
+            if (total === 0) return '';
+            const percent = renda > 0 ? Math.min((total / renda) * 100, 100) : 0;
+            const cfg = categoryConfig[cat];
+            return `
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                            <span style="width:6px;height:6px;border-radius:50%;background:${cfg.bar};box-shadow:0 0 6px ${cfg.bar};display:inline-block;flex-shrink:0;"></span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">${cat}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-300">${formatCurrency(total)}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:${cfg.bg};color:${cfg.color};">${Math.round(percent)}%</span>
+                        </div>
+                    </div>
+                    <div class="w-full rounded-full overflow-hidden" style="background:rgba(255,255,255,0.04);height:5px;">
+                        <div class="bar-fill h-full rounded-full" style="width:0%;background:${cfg.bar};box-shadow:0 0 6px ${cfg.bar}40;" data-target="${percent}"></div>
+                    </div>
+                </div>
+            `;
+        }).filter(Boolean).join('');
+
+        container.innerHTML = rows || '<p class="text-center text-slate-700 text-xs py-4">Sem gastos neste mês.</p>';
+
+        // Animate bars
+        setTimeout(() => {
+            container.querySelectorAll('.bar-fill').forEach(el => {
+                el.style.width = el.dataset.target + '%';
+            });
+        }, 60);
+    }
+
+    function renderList(data) {
+        const list = document.getElementById('transaction-list');
+        const sorted = [...data].sort((a,b) => new Date(b.data) - new Date(a.data));
+
+        if (sorted.length === 0) {
+            list.innerHTML = `<div class="p-12 text-center flex flex-col items-center gap-3">
+                <span class="material-symbols-outlined empty-icon">receipt_long</span>
+                <p class="text-slate-600 text-sm font-medium">Nenhum lançamento neste período.</p>
+            </div>`;
+            return;
+        }
+
+        list.innerHTML = sorted.map((t, i) => {
+            const cfg = categoryConfig[t.categoria] || categoryConfig['Fixos'];
+            const isRenda = t.categoria === 'Renda';
+            const isInvest = t.categoria === 'Investimentos';
+            const amtClass = isRenda ? 'amount-positive' : isInvest ? 'amount-invest' : 'amount-negative';
+            const amtPrefix = isRenda ? '+' : '−';
+
+            return `
+            <div class="tx-item p-4 flex items-center justify-between gap-4" data-index="${i}">
+                <div class="flex items-center gap-4 min-w-0">
+                    <div class="flex-shrink-0 p-2.5 rounded-2xl" style="background:${cfg.bg};">
+                        <span class="material-symbols-outlined" style="font-size:18px;display:block;color:${cfg.color};">${cfg.icon}</span>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-bold text-sm truncate" style="${isInvest ? 'color:var(--investment)' : ''}">${t.desc}</p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span class="text-[10px] font-bold uppercase tracking-wider" style="color:${cfg.color};opacity:0.7;">${t.categoria}</span>
+                            <span class="text-[10px] text-slate-700">·</span>
+                            <span class="text-[10px] text-slate-600">${formatDate(t.data)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 flex-shrink-0">
+                    <span class="${amtClass} font-extrabold text-sm">${amtPrefix} ${formatCurrency(t.valor)}</span>
+                    <button onclick="deleteTransaction(${transactions.indexOf(t)})" class="delete-btn text-slate-700 hover:text-red-400 transition-colors" title="Excluir">
+                        <span class="material-symbols-outlined" style="font-size:16px;display:block;">delete</span>
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function deleteTransaction(index) {
+        if (confirm('Excluir este lançamento?')) {
+            transactions.splice(index, 1);
+            localStorage.setItem('centz_v2.0', JSON.stringify(transactions));
+            updateUI();
+        }
+    }
+
+    // Form submit
+    document.getElementById('financeForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // RECUPERA O VALOR FORMATADO E CONVERTE PARA NÚMERO
+        const valorFormatado = document.getElementById('valor').value;
+        const valorFinal = parseCurrencyString(valorFormatado);
+
+        const t = {
+            categoria: document.getElementById('categoria').value,
+            desc:      document.getElementById('desc').value.trim(),
+            valor:     valorFinal, 
+            data:      document.getElementById('data').value,
+        };
+        
+        if (!t.desc || !t.valor || !t.data) return;
+        
+        transactions.push(t);
+        localStorage.setItem('centz_v2.0', JSON.stringify(transactions));
+        e.target.reset();
+        toggleModal();
+        updateUI();
+    });
+
+    // Init
+    updateUI();
+</script>
+</body>
+</html>
