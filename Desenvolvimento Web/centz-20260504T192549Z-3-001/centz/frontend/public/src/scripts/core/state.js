@@ -1,0 +1,15 @@
+let currentUser        = null;
+let transactions       = [];
+let budgets            = {};
+let savingsGoals       = [];
+let isLoginMode        = true;
+let currentTxType      = 'expense';
+let currentTxFilter    = 'all';
+let editingTxId        = null;
+let searchQuery        = '';
+let selectedMonth      = new Date().getMonth();
+let selectedYear       = new Date().getFullYear();
+let activeChartTab     = 'trend';
+let trendChartInstance = null;
+let barChartInstance   = null;
+let donutChartInstance = null;
